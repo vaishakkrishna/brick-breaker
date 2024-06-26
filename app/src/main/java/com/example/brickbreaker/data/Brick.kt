@@ -5,3 +5,4 @@ data class Brick(
     val size: Pair<Int, Int> = Pair(0, 0),
     val active: Boolean = true
 )
+

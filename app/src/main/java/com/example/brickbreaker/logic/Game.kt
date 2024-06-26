@@ -1,5 +1,8 @@
 package com.example.brickbreaker.logic
 
+import android.content.Context
+import android.media.MediaPlayer
+import com.example.brickbreaker.R
 import com.example.brickbreaker.constants.Constants
 import com.example.brickbreaker.constants.Constants.brickHeight
 import com.example.brickbreaker.constants.Constants.brickSpace
@@ -18,12 +21,16 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.withSign
 
-class Game(private val scope: CoroutineScope) {
+
+class Game(private val scope: CoroutineScope, context: Context) {
     // instantiate brick grid
     private val mutableState: MutableStateFlow<State> = MutableStateFlow(State())
     val state: Flow<State> = mutableState
+    private var brickmp: MediaPlayer = MediaPlayer.create(context, R.raw.brickhit)
+    private var paddlemp: MediaPlayer = MediaPlayer.create(context, R.raw.paddlehit)
     init {
         scope.launch {
+            paddlemp.setVolume(0.7F, 0.7F)
             while (true) {
                 delay(timeMillis = Constants.refreshDelay)
                 mutableState.update {
@@ -39,6 +46,12 @@ class Game(private val scope: CoroutineScope) {
                             it.ball.position.first < it.paddle.position.first + it.paddle.size.first &&
                             it.ball.position.second <= it.paddle.position.second + it.paddle.size.second) {
 
+                            if (paddlemp.isPlaying()) {
+                                paddlemp.stop()
+                                paddlemp.release()
+                                paddlemp = MediaPlayer.create(context, R.raw.brickhit)
+                            }
+                            paddlemp.start()
                             newVel = Pair(newVel.first, min(newVel.second * -1, newVel.second))
                         }
                         // ball hits the floor, lose
@@ -86,6 +99,12 @@ class Game(private val scope: CoroutineScope) {
                             if (row < numBrickRows &&
                                 col < numBrickCols &&
                                 newBricks[row][col].active) {
+                                if (brickmp.isPlaying()) {
+                                    brickmp.stop()
+                                    brickmp.release()
+                                    brickmp = MediaPlayer.create(context, R.raw.brickhit)
+                                }
+                                brickmp.start()
                                 newBricks[row][col] = it.bricks[row][col].copy(active=false)
                                 newVel = Pair(
                                     newVel.first.withSign(-directions[d].first),

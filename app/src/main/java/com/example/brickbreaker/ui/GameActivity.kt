@@ -42,10 +42,9 @@ fun BrickBreaker(game: Game) {
     val state = game.state.collectAsState(initial = null)
     BoxWithConstraints(modifier = Modifier
         .fillMaxSize()
-        .background(Color.LightGray)) {
+        .background(Color.White)) {
         Box(Modifier
             .size(
-
                 width = maxWidth,
                 height = maxHeight
             )
@@ -73,9 +72,10 @@ fun BrickBreaker(game: Game) {
             }) {
             state.value?.let {
                 if (it.gameOver) {
-                    GameOver({game.reset()})
+                    GameOver({game.reset()}, it.score)
                 } else {
-                    PlayArea(it)
+                    PlayArea(it, modifier = Modifier
+                        .background(color = Color.Black))
                 }
             }
         }
@@ -84,7 +84,6 @@ fun BrickBreaker(game: Game) {
 
 @Composable
 fun PlayArea(state: State, modifier: Modifier = Modifier) {
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -94,72 +93,37 @@ fun PlayArea(state: State, modifier: Modifier = Modifier) {
                 bottom = 20.dp
             )
     ) {
-        Text(
-            text = "Score: ${state.score}",
-            Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp)
-                .border(BorderStroke(2.dp, Color.Gray)),
-            color = Color.Black
-        )
+        ScoreCard(score = state.score)
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .border(border = BorderStroke(2.dp, Color.Black))
 
         ) {
-            //width scale factor
-            val wsf = size.width / screenWidth
-            //height scale factor
-            val hsf = size.height / screenHeight
-            // ball
-            drawCircle(
-                color = Color(255, 138, 128),
-                radius = state.ball.radius*wsf,
-                center = Offset(
-                    state.ball.position.first*wsf,
-                    state.ball.position.second*hsf
-                )
-            )
-            // paddle
-            drawRect(
-                color = Color(255, 138, 128),
-                topLeft = Offset(
-                    state.paddle.position.first*wsf,
-                    state.paddle.position.second*hsf
-                ),
-                size = Size(
-                    state.paddle.size.first*wsf,
-                    state.paddle.size.second*hsf
-                )
-            )
-            // bricks
+            drawBall(state.ball, this)
+            drawPaddle(state.paddle, this)
             state.bricks.forEach { brickRow ->
                 brickRow.forEach { brick ->
-                    if (brick.active) {
-                        drawRect(
-                            color = Color.Blue,
-                            topLeft = Offset(
-                                brick.position.first * wsf,
-                                brick.position.second * hsf,
-                            ),
-                            size = Size(
-                                brick.size.first * wsf,
-                                brick.size.second * hsf,
-                            ),
-                            style = Stroke(
-                                width = 5F,
-                            )
-                        )
-                    }
+                    drawBrick(brick, this)
                 }
             }
         }
     }
 }
-
 @Composable
-fun GameOver(resetCallback: () -> Unit, modifier: Modifier = Modifier) {
+fun ScoreCard(score: Int, modifier: Modifier = Modifier) {
+    Text(
+        text = "Score: ${score}",
+        modifier
+            .fillMaxWidth()
+            .padding(top = 20.dp)
+            .border(BorderStroke(4.dp, Color.Gray)),
+        fontSize = 30.sp,
+        color = Color.Black
+    )
+}
+@Composable
+fun GameOver(resetCallback: () -> Unit, score: Int, modifier: Modifier = Modifier) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -167,21 +131,15 @@ fun GameOver(resetCallback: () -> Unit, modifier: Modifier = Modifier) {
             .fillMaxHeight()
     ) {
         Text(text = "Game Over!", fontSize = 100.sp, lineHeight = 100.sp, textAlign=TextAlign.Center)
+        Text(text = "Score: $score", fontSize = 80.sp, lineHeight = 100.sp, textAlign=TextAlign.Center)
         Button(onClick = {resetCallback()}) {
             Text(text = "Play Again")
+
         }
     }
 
 }
 
-
-@Composable
-@Preview
-fun GameOverPreview() {
-    BrickBreakerTheme {
-        GameOver({})
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

@@ -2,7 +2,7 @@ package com.example.brickbreaker.data
 
 data class Ball(
     // position on the canvas
-    val position: Pair<Float, Float> = Pair(300F, 1000F),
+    val position: Pair<Float, Float> = Pair(300F, 800F),
     // radius
     val radius: Float = 15F,
     // pixels per second
