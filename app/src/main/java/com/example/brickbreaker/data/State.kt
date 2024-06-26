@@ -9,10 +9,10 @@ data class State(
     val ball: Ball = Ball(),
     val paddle: Paddle = Paddle(),
     val bricks: Array<Array<Brick>> = Array(
-        Constants.numBrickCols,
-        {i -> Array(Constants.numBrickRows,
+        Constants.numBrickRows,
+        {i -> Array(Constants.numBrickCols,
             {j -> Brick(
-                Pair(i*(brickWidth + brickSpace), j*(brickHeight + brickSpace)),
+                Pair(j*(brickWidth + brickSpace), i*(brickHeight + brickSpace)),
                 Pair(brickWidth, brickHeight)
                 )
             }

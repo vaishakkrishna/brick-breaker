@@ -1,8 +1,12 @@
 package com.example.brickbreaker.logic
 
 import com.example.brickbreaker.constants.Constants
+import com.example.brickbreaker.constants.Constants.brickHeight
+import com.example.brickbreaker.constants.Constants.brickSpace
+import com.example.brickbreaker.constants.Constants.brickWidth
+import com.example.brickbreaker.constants.Constants.numBrickCols
+import com.example.brickbreaker.constants.Constants.numBrickRows
 import com.example.brickbreaker.constants.Constants.screenWidth
-import com.example.brickbreaker.data.Brick
 import com.example.brickbreaker.data.State
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -10,12 +14,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.withSign
 
 class Game(private val scope: CoroutineScope) {
-//    private val mutex = Mutex()
     // instantiate brick grid
     private val mutableState: MutableStateFlow<State> = MutableStateFlow(State())
     val state: Flow<State> = mutableState
@@ -56,57 +59,41 @@ class Game(private val scope: CoroutineScope) {
                         newVel = Pair(min(newVel.first, newVel.first*-1), newVel.second)
                     }
                     else {
-                        // compute which brick is colliding with the ball
-                        var brick = Brick(Pair(0, 0), Pair(0, 0))
-                        for (i in 0..<it.bricks.size){
-                            for (j in 0..<it.bricks[0].size) {
-                                brick = it.bricks[i][j]
-                                if (brick.active) {
-                                    // ball hits side
-                                    if (it.ball.position.second >= brick.position.second &&
-                                        it.ball.position.second <= brick.position.second + brick.size.second) {
-                                        // left
-                                        if (it.ball.position.first + it.ball.radius >= brick.position.first &&
-                                            it.ball.position.first + it.ball.radius <= brick.position.first + brick.size.first) {
-                                            newBricks[i][j] = brick.copy(active=false)
-                                            newVel = Pair(-1*newVel.first.absoluteValue, newVel.second)
-                                            newScore++;
-                                            if (it.score % 3 == 0) {
-                                                newVel = Pair(newVel.first*1.1F, newVel.second*1.1F)
-                                            }
-                                        //right
-                                        } else if (it.ball.position.first - it.ball.radius >= brick.position.first &&
-                                            it.ball.position.first - it.ball.radius <= brick.position.first + brick.size.first) {
-                                            newBricks[i][j] = brick.copy(active = false)
-                                            newVel = Pair(newVel.first.absoluteValue, newVel.second)
-                                            newScore++;
-                                            if (it.score % 3 == 0) {
-                                                newVel = Pair(newVel.first*1.1F, newVel.second*1.1F)
-                                            }
-                                        }
-                                    }
-                                    else if (it.ball.position.first >= brick.position.first &&
-                                            it.ball.position.first <= brick.position.first + brick.size.first) {
-                                            //top
-                                            if (it.ball.position.second + it.ball.radius >= brick.position.second &&
-                                                it.ball.position.second + it.ball.radius <= brick.position.second + brick.size.second) {
-                                                newBricks[i][j] = brick.copy(active=false)
-                                                newVel = Pair(newVel.first, -1*newVel.second.absoluteValue)
-                                                newScore++;
-                                                if (it.score % 3 == 0) {
-                                                    newVel = Pair(newVel.first*1.1F, newVel.second*1.1F)
-                                                }
-                                            //bottom
-                                            } else if (it.ball.position.second - it.ball.radius >= brick.position.second &&
-                                                it.ball.position.second - it.ball.radius <= brick.position.second + brick.size.second) {
-                                                newBricks[i][j] = brick.copy(active = false)
-                                                newVel = Pair(newVel.first, newVel.second.absoluteValue)
-                                                newScore++;
-                                                if (it.score % 3 == 0) {
-                                                    newVel = Pair(newVel.first*1.1F, newVel.second*1.1F)
-                                                }
-                                        }
-                                    }
+                        // compute which bricks are colliding with the ball on
+                        // each side (top, bottom, right, left) of the ball
+                        val directions = arrayOf(
+                            // left
+                            Pair(-1*it.ball.radius, 0F),
+                            // right
+                            Pair(it.ball.radius, 0F),
+                            // top
+                            Pair(0F, -1*it.ball.radius),
+                            // bottom
+                            Pair(0F, it.ball.radius),
+                        )
+                        var coord: Pair<Float, Float>
+                        var col: Int
+                        var row: Int
+                        for (d in directions.indices) {
+                            coord = Pair(
+                                it.ball.position.first + directions[d].first,
+                                it.ball.position.second + directions[d].second
+                            )
+                            row = coord.second.toInt() / (brickHeight + brickSpace)
+                            col = coord.first.toInt() / (brickWidth + brickSpace)
+
+                            println("coord (${coord.first}, ${coord.second}) row ${row} col ${col}")
+                            if (row < numBrickRows &&
+                                col < numBrickCols &&
+                                newBricks[row][col].active) {
+                                newBricks[row][col] = it.bricks[row][col].copy(active=false)
+                                newVel = Pair(
+                                    newVel.first.withSign(-directions[d].first),
+                                    newVel.second.withSign(-directions[d].second)
+                                )
+                                newScore++;
+                                if (it.score % 3 == 0) {
+                                    newVel = Pair(newVel.first*1.1F, newVel.second*1.1F)
                                 }
                             }
                         }
@@ -143,7 +130,6 @@ class Game(private val scope: CoroutineScope) {
     }
 
     fun reset() {
-        println("reset")
         this.mutableState.update {
             State()
         }
