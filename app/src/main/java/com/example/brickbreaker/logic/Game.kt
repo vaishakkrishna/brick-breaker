@@ -27,7 +27,7 @@ class Game(private val scope: CoroutineScope) {
             while (true) {
                 delay(timeMillis = Constants.refreshDelay)
                 mutableState.update {
-                    var newGameOver = false;
+                    var newGameOver = false
                     var newVel = Pair(it.ball.velocity.first, it.ball.velocity.second)
 
                     val newBricks = it.bricks.clone()
@@ -91,7 +91,7 @@ class Game(private val scope: CoroutineScope) {
                                     newVel.first.withSign(-directions[d].first),
                                     newVel.second.withSign(-directions[d].second)
                                 )
-                                newScore++;
+                                newScore++
                                 if (it.score % 3 == 0) {
                                     newVel = Pair(newVel.first*1.1F, newVel.second*1.1F)
                                 }

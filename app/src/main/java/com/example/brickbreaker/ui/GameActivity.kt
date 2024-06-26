@@ -1,4 +1,5 @@
 package com.example.brickbreaker.ui
+import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -35,6 +36,7 @@ import com.example.brickbreaker.logic.Game
 import com.example.brickbreaker.ui.theme.BrickBreakerTheme
 
 
+@SuppressLint("ReturnFromAwaitPointerEventScope")
 @Composable
 fun BrickBreaker(game: Game) {
     val state = game.state.collectAsState(initial = null)
